@@ -58,29 +58,6 @@ The child processes will be filtered based on the environment of the application
 
 `Nursery` helps you keep your application lightweight and elegant by ensuring that only the necessary child processes are started in the right environment. This can help optimize resource usage, simplify the supervision tree, and provide better control over your application's behavior in different environments.
 
-## Example with Custom Configuration
-
-You can also define the child processes with custom configuration options, which will be passed to the child processes upon startup:
-
-```elixir
-defmodule MyApp do
-  use Nursery, 
-    app_name: :my_app,
-    supervisor_name: :my_supervisor # Optional, defauls to __MODULE__.Supervisor
-    strategy: :one_for_one,
-    children: [
-      [module: Foo, config: [a: 1], envs: :all],
-      [module: Bar, config: [b: 2], envs: [:prod, :dev]],
-      [module: Baz,                 envs: [:test]]
-    ]
-end
-```
-
-In this example:
-- `Foo` will be included in all environments, with the configuration `config: [a: 1]`.
-- `Bar` will only be included in the `:prod` and `:dev` environments, with the configuration `config: [b: 2]`.
-- `Baz` will be included only in the `:test` environment.
-
 ## Contributing
 
 Feel free to fork the project, submit issues, or create pull requests. Contributions are always welcome!
