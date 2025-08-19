@@ -1,1 +1,90 @@
-# nursery
+# Nursery
+
+**Nursery** is a lightweight Elixir library for supervising child processes based on the current environment (e.g., `:dev`, `:test`, `:prod`). The goal is to allow you to supervise and filter child processes in a way that's tailored to your application's environment.
+
+This is particularly useful when you want to control which child processes are started in different environments, without cluttering your application logic.
+
+## Installation
+
+To use `Nursery`, simply add it to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:nursery, "~> 0.1.0"}
+  ]
+end
+```
+
+Then run:
+
+```sh
+mix deps.get
+```
+
+## Usage
+
+The `Nursery` module provides a macro that you can use in your application. This macro will set up the environment-aware supervisor for your child processes. 
+
+### Example
+
+Here’s how you can use the `Nursery` macro in your application:
+
+```elixir
+defmodule MyApp do
+  use Nursery, 
+    app_name: :my_app,
+    strategy: :one_for_one,
+    children: [
+      [module: Foo, config: [a: 1], envs: :all],
+      [module: Bar, config: [b: 2], envs: [:prod, :dev]],
+      [module: Baz,                 envs: [:test]]
+    ]
+end
+```
+
+### How it works
+
+- **`module`**: The child process module (e.g., `Foo`, `Bar`, etc.)
+- **`config`**: Optional configuration that will be passed to the child process during startup.
+- **`envs`**: The environments in which the child process should be included. If `:all` is specified, the child will be included in all environments.
+
+The child processes will be filtered based on the environment of the application (as configured in your `config.exs` file). For example:
+- `Foo` will be included in all environments because `envs: :all`.
+- `Bar` will only be included in `:prod` and `:dev`.
+- `Baz` will only be included in `:test`.
+
+### Why `Nursery`?
+
+`Nursery` helps you keep your application lightweight and elegant by ensuring that only the necessary child processes are started in the right environment. This can help optimize resource usage, simplify the supervision tree, and provide better control over your application's behavior in different environments.
+
+## Example with Custom Configuration
+
+You can also define the child processes with custom configuration options, which will be passed to the child processes upon startup:
+
+```elixir
+defmodule MyApp do
+  use Nursery, 
+    app_name: :my_app,
+    supervisor_name: :my_supervisor # Optional, defauls to __MODULE__.Supervisor
+    strategy: :one_for_one,
+    children: [
+      [module: Foo, config: [a: 1], envs: :all],
+      [module: Bar, config: [b: 2], envs: [:prod, :dev]],
+      [module: Baz,                 envs: [:test]]
+    ]
+end
+```
+
+In this example:
+- `Foo` will be included in all environments, with the configuration `config: [a: 1]`.
+- `Bar` will only be included in the `:prod` and `:dev` environments, with the configuration `config: [b: 2]`.
+- `Baz` will be included only in the `:test` environment.
+
+## Contributing
+
+Feel free to fork the project, submit issues, or create pull requests. Contributions are always welcome!
+
+## License
+
+MIT License. See `LICENSE` for more information.
