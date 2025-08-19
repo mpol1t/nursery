@@ -4,7 +4,7 @@ defmodule Nursery.MixProject do
   def project do
     [
       app:               :nursery,
-      version:           "0.1.0",
+      version:           "0.1.1",
       elixir:            "~> 1.16",
       start_permanent:   Mix.env() == :prod,
       deps:              deps(),
@@ -32,6 +32,7 @@ defmodule Nursery.MixProject do
 
   defp deps do
     [
+      {:ex_doc,      "~> 0.38.3", only: [:dev],  runtime: false},
       {:excoveralls, "~> 0.18.5", only: [:test], runtime: false}
     ]
   end
