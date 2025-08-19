@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We as contributors and maintainers of **binance-s3-trades** pledge to make participation in our project and our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex, gender identity and expression, experience level, education level, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
+We as contributors and maintainers of **nursery** pledge to make participation in our project and our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex, gender identity and expression, experience level, education level, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
 ## Our Standards
 
