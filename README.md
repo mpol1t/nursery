@@ -11,7 +11,7 @@ To use `Nursery`, simply add it to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:nursery, "~> 0.1.0"}
+    {:nursery, "~> 0.1.1"}
   ]
 end
 ```
@@ -41,6 +41,15 @@ defmodule MyApp do
       [module: Baz,                 envs: [:test]]
     ]
 end
+```
+
+Make sure to add `:environment` variable to your `config.exs` file:
+
+```elixir
+use Config
+
+config :my_app,
+  environment: config_env()
 ```
 
 ### How it works
