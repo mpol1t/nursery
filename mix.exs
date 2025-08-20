@@ -33,6 +33,8 @@ defmodule Nursery.MixProject do
   defp deps do
     [
       {:ex_doc,      "~> 0.38.3", only: [:dev],  runtime: false},
+      {:credo,       "~> 1.7",    only: [:dev],  runtime: false},
+      {:dialyxir,    "~> 1.4",    only: [:dev],  runtime: false},
       {:excoveralls, "~> 0.18.5", only: [:test], runtime: false}
     ]
   end
