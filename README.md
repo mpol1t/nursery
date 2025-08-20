@@ -28,7 +28,7 @@ The `Nursery` module provides a macro that you can use in your application. This
 
 ### Example
 
-Here’s how you can use the `Nursery` macro in your application:
+Here’s how you can use the `Nursery` macro in your `application.ex`:
 
 ```elixir
 defmodule MyApp do
