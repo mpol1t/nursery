@@ -25,6 +25,15 @@ jobs:
       - name: Install dependencies
         run: MIX_ENV=test mix deps.get
 
+      - name: Build PLT
+        run: mix dialyzer --plt
+
+      - name: Run Dialyzer
+        run: mix dialyzer
+
+      - name: Run Credo Linter
+        run: mix credo
+
       - name: Run tests
         run: MIX_ENV=test mix coveralls.json
 
