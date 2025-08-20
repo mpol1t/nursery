@@ -50,7 +50,7 @@ defmodule Nursery do
       defp children do
         env = Application.fetch_env!(unquote(app_name), :environment)
         unquote(children)
-        |> Nursery.Utils.for_env(env)
+        |> Nursery.Utils.filter_by_env(env)
       end
     end
   end
