@@ -7,9 +7,9 @@ defmodule Nursery.Utils do
  @doc """
   Filters the list of child process specifications based on the provided environment.
 
-  If the `envs` field is `:all`, the child process will always be included.
-  If `envs` is a list, the child process will only be included if the current 
-  environment is in that list. Additionally, inserts empty config list if one is missing
+  If the `envs` field is `:all`, the child process will always be included. If `envs` is a list,
+  the child process will only be included if the current environment is in that list,
+  unless `:all` is a member. Additionally, inserts empty config list if one is missing
   from the spec.
 
   ## Parameters:
@@ -23,16 +23,28 @@ defmodule Nursery.Utils do
   ## Raises:
     - `ArgumentError`: If the `:envs` field in any spec is neither `:all` nor a valid list of environments.
   """
-  @spec for_env([keyword()], atom()) :: [keyword()]
-  def for_env(specs, env) do
-    Enum.filter(specs, fn spec ->
-      case Keyword.get(spec, :envs) do
-        :all                    -> true         # Always include this spec if `envs` is `:all`
-        envs when is_list(envs) -> env in envs  # Filter by the provided `envs` list
-        _                       -> 
-          raise ArgumentError, "Invalid value for :envs in spec #{inspect(spec)}. It must be either `:all` or a list of environments."
+  @spec filter_by_env([module: module(), config: any(), envs: atom() | [atom(), ...]], atom()) :: [keyword()]
+  def filter_by_env(specs, env) do
+    check_format(specs)
+    |> Enum.filter(& env_filter(&1[:envs], env))
+    |> Enum.map(&format_spec/1)
+  end
+
+  defp env_filter(:all,  _env),                    do: true
+  defp env_filter(envs,   env) when is_list(envs), do: :all in envs or env in envs
+  defp env_filter(envs,  _env)                     do
+    raise ArgumentError, "Invalid value for :envs in spec #{inspect(envs)}. It must be either :all or a list of environments."
+  end
+
+  defp format_spec([module: m, config: c, envs: _]), do: {m, c}
+  defp format_spec([module: m,            envs: _]), do: {m, []}
+
+  defp check_format(specs) do
+    Enum.each(specs, fn spec ->
+      unless Keyword.has_key?(spec, :module) and Keyword.has_key?(spec, :envs) do
+        raise ArgumentError, "Invalid child spec format for #{inspect(spec)}. Spec must include keys :module and :envs."
       end
     end)
-    |> Enum.map(fn spec -> {spec[:module], Keyword.get(spec, :config, [])} end)  # Default to `[]` if `config` is missing
+    specs
   end
 end
