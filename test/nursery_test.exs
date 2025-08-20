@@ -21,40 +21,83 @@ defmodule NurseryTest do
     end
   end
 
-  describe "Utils.for_env/2"  do
+  describe "Utils.filter_by_env/2" do
     test "includes children with :all envs" do
       specs = [
-        [module: SomeModule, envs: :all],
-        [module: AnotherModule, envs: [:prod]]
+        [module: Foo, config: [a: 1], envs: :all],
+        [module: Bar,                 envs: [:prod]]
       ]
 
-      result = Utils.for_env(specs, :dev)
+      assert [{Foo, [a: 1]}] = Utils.filter_by_env(specs, :dev)
+    end
 
-      # The module with :all envs should always be included
-      assert Enum.any?(result, fn {module, _config} -> module == SomeModule end)
+    test "includes children with :all as a member of envs" do
+      specs = [
+        [module: Foo, config: [c: 3], envs: [:all]],
+        [module: Bar, config: [d: 4], envs: [:prod]]
+      ]
+
+      assert [{Foo, [c: 3]}] = Utils.filter_by_env(specs, :dev)
     end
 
     test "includes children for matching environments" do
       specs = [
-        [module: SomeModule, envs: [:dev, :test]],
-        [module: AnotherModule, envs: [:prod]]
+        [module: Foo, envs: [:dev, :test]],
+        [module: Bar, envs: [:prod]]
       ]
 
-      result = Utils.for_env(specs, :dev)
-    
-      # The child with matching environments should be included
-      assert Enum.any?(result, fn {module, _config} -> module == SomeModule end)
-      assert Enum.filter(result, fn {module, _config} -> module == AnotherModule end) |> Enum.empty?()
+      assert [{Foo, []}] = Utils.filter_by_env(specs, :dev)
     end
 
     test "raises error for invalid :envs value" do
       invalid_spec = [
-        [module: SomeModule, envs: :invalid]
+        [module: Foo, envs: :invalid]
       ]
 
       assert_raise ArgumentError, ~r/Invalid value for :envs/, fn ->
-        Utils.for_env(invalid_spec, :dev)
+        Utils.filter_by_env(invalid_spec, :dev)
       end
+    end
+
+    test "raises error for invalid spec format" do
+      invalid_spec = [
+        [modul: Foo, envs: :invalid]
+      ]
+
+      assert_raise ArgumentError, ~r/Invalid child spec format for/, fn ->
+        Utils.filter_by_env(invalid_spec, :dev)
+      end
+    end
+
+    test "includes children with :all envs even if empty list is passed" do
+      specs = [
+        [module: Foo, envs: :all],
+        [module: Bar, envs: []]
+      ]
+
+      assert [{Foo, []}] = Utils.filter_by_env(specs, :dev)
+    end
+
+    test "includes children for multiple matching environments" do
+      specs = [
+        [module: Foo,                 envs: [:dev, :prod]],
+        [module: Bar, config: [a: 5], envs: [:prod]]
+      ]
+
+      assert [{Foo, []}, {Bar, [a: 5]}] = Utils.filter_by_env(specs, :prod)
+    end
+
+    test "returns empty list when no spec matches the environment" do
+      specs = [
+        [module: Foo, envs: [:test]],
+        [module: Bar, envs: [:prod]]
+      ]
+
+      assert [] = Utils.filter_by_env(specs, :dev)
+    end
+
+    test "returns empty list for empty specs" do
+      assert [] = Utils.filter_by_env([], :dev)
     end
   end
 end
