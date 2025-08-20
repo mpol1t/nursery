@@ -1,3 +1,11 @@
+[![codecov](https://codecov.io/gh/mpol1t/nursery/graph/badge.svg?token=bhkG0EYkWC)](https://codecov.io/gh/mpol1t/nursery)
+[![Hex.pm](https://img.shields.io/hexpm/v/nursery.svg)](https://hex.pm/packages/nursery)
+[![License](https://img.shields.io/github/license/mpol1t/nursery.svg)](https://github.com/mpol1t/nursery/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-hexdocs-blue.svg)](https://hexdocs.pm/nursery)
+[![Build Status](https://github.com/mpol1t/nursery/actions/workflows/elixir.yml/badge.svg)](https://github.com/mpol1t/nursery/actions)
+[![Elixir Version](https://img.shields.io/badge/elixir-~%3E%201.16-purple.svg)](https://elixir-lang.org/)
+
+
 # Nursery
 
 **Nursery** is a lightweight Elixir library for supervising child processes based on the current environment (e.g., `:dev`, `:test`, `:prod`). The goal is to allow you to supervise and filter child processes in a way that's tailored to your application's environment.
