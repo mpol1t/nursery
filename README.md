@@ -44,7 +44,7 @@ defmodule MyApp do
     app_name: :my_app,
     strategy: :one_for_one,
     children: [
-      [module: Foo, config: [a: 1], envs: :all],
+      [module: Foo, config: [a: 1], envs: :all], # [:all] is also valid
       [module: Bar, config: [b: 2], envs: [:prod, :dev]],
       [module: Baz,                 envs: [:test]] # config is optional
     ]
