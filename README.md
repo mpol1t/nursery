@@ -38,7 +38,7 @@ defmodule MyApp do
     children: [
       [module: Foo, config: [a: 1], envs: :all],
       [module: Bar, config: [b: 2], envs: [:prod, :dev]],
-      [module: Baz,                 envs: [:test]]
+      [module: Baz,                 envs: [:test]] # config is optional
     ]
 end
 ```
