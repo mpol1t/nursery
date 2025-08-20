@@ -11,7 +11,7 @@ To use `Nursery`, simply add it to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:nursery, "~> 0.1.1"}
+    {:nursery, "~> 0.1.2"}
   ]
 end
 ```
