@@ -23,7 +23,7 @@ defmodule Nursery.Utils do
   ## Raises:
     - `ArgumentError`: If the `:envs` field in any spec is neither `:all` nor a valid list of environments.
   """
-  @spec filter_by_env([module: module(), config: any(), envs: atom() | [atom(), ...]], atom()) :: [keyword()]
+  @spec filter_by_env([[module: module(), config: any(), envs: atom() | [atom(), ...]]], atom()) :: [{module(), any()}]
   def filter_by_env(specs, env) do
     check_format(specs)
     |> Enum.filter(& env_filter(&1[:envs], env))
