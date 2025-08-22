@@ -19,7 +19,7 @@ To use `Nursery`, simply add it to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:nursery, "~> 0.1.3"}
+    {:nursery, "~> 0.2.0"}
   ]
 end
 ```
@@ -41,35 +41,47 @@ Here’s how you can use the `Nursery` macro in your `application.ex`:
 ```elixir
 defmodule MyApp do
   use Nursery, 
-    app_name: :my_app,
-    strategy: :one_for_one,
+    app_name:        :my_app,
+    supervisor_name: MyApp.Sup,
+    strategy:        :one_for_one,
     children: [
-      [module: Foo, config: [a: 1], envs: :all], # [:all] is also valid
-      [module: Bar, config: [b: 2], envs: [:prod, :dev]],
-      [module: Baz,                 envs: [:test]] # config is optional
+      [module: A, config: [a: 1],                          envs: :all],
+      [module: B, config: [b: 1],                          envs: [:all],
+      [module: C, config: [c: 2],                          envs: [:prod, :dev]],
+      [module: D,                                          envs: [:test]],
+      [spec:   Supervisor.child_spec({E, [e: 3]}, id: :e), envs: [:test]]
     ]
 end
 ```
 
-Make sure to add `:environment` variable to your `config.exs` file:
+Make sure to add the `:environment` variable to your `config.exs` file:
 
 ```elixir
 use Config
 
 config :my_app,
-  environment: config_env()
+  environment: config_env() # Uses the environment defined by mix, i.e., :dev, :test, :prod
 ```
+
+---
 
 ### How it works
 
-- **`module`**: The child process module (e.g., `Foo`, `Bar`, etc.)
-- **`config`**: Optional configuration that will be passed to the child process during startup.
-- **`envs`**: The environments in which the child process should be included. If `:all` is specified, the child will be included in all environments.
+- **`module`**: Specifies the child process module to be used (e.g., `A`, `B`, etc.). This will be the actual module that gets started under the supervisor.
+- **`config`**: Optional configuration that will be passed to the child process when it starts. If no configuration is provided, the child will be started with an empty list (`[]`) by default.
+- **`envs`**: Specifies which environments the child process will be included in. This can be:
+  - `:all`: The child will be included in all environments (e.g., development, production, test).
+  - A list of specific environments (e.g., `[:prod, :dev]`), where the child will only be included in those specified environments.
+  
+### Example Breakdown:
 
-The child processes will be filtered based on the environment of the application (as configured in your `config.exs` file). For example:
-- `Foo` will be included in all environments because `envs: :all`.
-- `Bar` will only be included in `:prod` and `:dev`.
-- `Baz` will only be included in `:test`.
+- `A`: Always included in all environments (`envs: :all`).
+- `B`: Always included in all environments (`envs: :all`).
+- `C`: Only included in `:prod` and `:dev` environments (`envs: [:prod, :dev]`).
+- `D`: Only included in `:test` environment (`envs: [:test]`).
+- `E`: This child uses `Supervisor.child_spec/2` to specify a custom child process specification and is included only in the `:test` environment (`envs: [:test]`).
+
+This way, you can define child processes that are only started in specific environments, making it easier to configure different services based on the environment your application is running in.
 
 ### Why `Nursery`?
 
