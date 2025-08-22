@@ -1,4 +1,6 @@
 defmodule AgentApp do
+  @moduledoc false
+  
   use Nursery,
     app_name:        :agent_app,
     strategy:        :one_for_one,
