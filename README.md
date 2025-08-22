@@ -76,7 +76,7 @@ config :my_app,
 ### Example Breakdown:
 
 - `A`: Always included in all environments (`envs: :all`).
-- `B`: Always included in all environments (`envs: :all`).
+- `B`: Always included in all environments (`envs: [:all]`).
 - `C`: Only included in `:prod` and `:dev` environments (`envs: [:prod, :dev]`).
 - `D`: Only included in `:test` environment (`envs: [:test]`).
 - `E`: This child uses `Supervisor.child_spec/2` to specify a custom child process specification and is included only in the `:test` environment (`envs: [:test]`).
