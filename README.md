@@ -46,7 +46,7 @@ defmodule MyApp do
     strategy:        :one_for_one,
     children: [
       [module: A, config: [a: 1],                          envs: :all],
-      [module: B, config: [b: 1],                          envs: [:all],
+      [module: B, config: [b: 1],                          envs: [:all]],
       [module: C, config: [c: 2],                          envs: [:prod, :dev]],
       [module: D,                                          envs: [:test]],
       [spec:   Supervisor.child_spec({E, [e: 3]}, id: :e), envs: [:test]]
