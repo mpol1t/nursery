@@ -36,12 +36,13 @@ defmodule Nursery.Utils do
     raise ArgumentError, "Invalid value for :envs in spec #{inspect(envs)}. It must be either :all or a list of environments."
   end
 
+  defp format_spec([spec:   s,            envs: _]), do: s
   defp format_spec([module: m, config: c, envs: _]), do: {m, c}
   defp format_spec([module: m,            envs: _]), do: {m, []}
 
   defp check_format(specs) do
     Enum.each(specs, fn spec ->
-      unless Keyword.has_key?(spec, :module) and Keyword.has_key?(spec, :envs) do
+      unless (Keyword.has_key?(spec, :module) or Keyword.has_key?(spec, :spec)) and Keyword.has_key?(spec, :envs) do
         raise ArgumentError, "Invalid child spec format for #{inspect(spec)}. Spec must include keys :module and :envs."
       end
     end)

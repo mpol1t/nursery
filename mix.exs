@@ -7,6 +7,7 @@ defmodule Nursery.MixProject do
       version:           "0.1.3",
       elixir:            "~> 1.16",
       start_permanent:   Mix.env() == :prod,
+      elixirc_paths:     elixirc_paths(Mix.env()),
       deps:              deps(),
       description:       "Supervise your children in the appropriate environment",
       package:           [
@@ -24,6 +25,9 @@ defmodule Nursery.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
+
   def application do
     [
       extra_applications: [:logger]
@@ -35,7 +39,8 @@ defmodule Nursery.MixProject do
       {:ex_doc,      "~> 0.38.3", only: [:dev],  runtime: false},
       {:credo,       "~> 1.7",    only: [:dev],  runtime: false},
       {:dialyxir,    "~> 1.4",    only: [:dev],  runtime: false},
-      {:excoveralls, "~> 0.18.5", only: [:test], runtime: false}
+      {:excoveralls, "~> 0.18.5", only: [:test], runtime: false},
+      {:stream_data, "~> 1.2",    only: [:test], runtime: false}
     ]
   end
 end

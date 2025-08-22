@@ -1,25 +1,10 @@
 defmodule NurseryTest do
   use ExUnit.Case
+  use ExUnitProperties
+
   doctest Nursery
 
   alias Nursery.Utils
-
-  defmodule TestApp do
-    use Nursery,
-      app_name: :my_app,
-      strategy: :one_for_one,
-      children:
-        [test_child_spec()]
-        
-    defp test_child_spec do
-      [
-        module: SomeModule,
-        id: SomeModule,
-        start: {SomeModule, :start_link, []},
-        envs: [:dev]
-      ]
-    end
-  end
 
   describe "Utils.filter_by_env/2" do
     test "includes children with :all envs" do
@@ -29,6 +14,15 @@ defmodule NurseryTest do
       ]
 
       assert [{Foo, [a: 1]}] = Utils.filter_by_env(specs, :dev)
+    end
+
+    test "correctly handles :spec format" do
+      child_spec = Supervisor.child_spec({Agent, fn -> 0 end}, id: :agent_a)
+      specs      = [
+        [spec: child_spec, envs: [:dev]],
+      ]
+
+      assert [^child_spec] = Utils.filter_by_env(specs, :dev)
     end
 
     test "includes children with :all as a member of envs" do
@@ -98,6 +92,77 @@ defmodule NurseryTest do
 
     test "returns empty list for empty specs" do
       assert [] = Utils.filter_by_env([], :dev)
+    end
+
+    property "raises ArgumentError when spec format is invalid" do
+      check all spec <- StreamData.list_of(
+        StreamData.keyword_of(StreamData.integer()),
+        min_length: 1,
+        max_length: 5
+      ) do
+        assert_raise ArgumentError, ~r/Invalid child spec format for/, fn ->
+          Enum.map(spec, & Keyword.drop(&1, [:module, :envs])) |> Utils.filter_by_env(:dev)
+        end
+      end
+    end
+
+    property "defaults to empty list when config argument is missing" do
+      check all spec <- StreamData.list_of(
+        StreamData.fixed_list(
+          [
+            StreamData.tuple({StreamData.constant(:module), StreamData.atom(:alphanumeric)}),
+            StreamData.tuple({StreamData.constant(:envs),   StreamData.constant(:all)})
+          ]
+        )
+      ) do
+        assert Utils.filter_by_env(spec, :dev) |> Enum.all?(fn x -> elem(x, 1) == [] end)
+      end
+    end
+
+    property "raises ArgumentError when envs argument is invalid" do
+      check all spec <- StreamData.list_of(
+        StreamData.fixed_list(
+          [
+            StreamData.tuple({StreamData.constant(:module), StreamData.atom(:alphanumeric)}),
+            StreamData.tuple({StreamData.constant(:envs),   StreamData.integer()})
+          ]
+        ),
+        min_length: 1
+      ) do
+        assert_raise ArgumentError, ~r/Invalid value for :envs/, fn ->
+          Utils.filter_by_env(spec, :dev)
+        end
+      end
+    end
+
+    defp filter_envs_oracle(specs, env) do
+      for [module: m, envs: e] <- specs, e == :all or :all in e or env in e do
+        {m, []}
+      end 
+    end
+
+    property "correctly filters modules for a given environment" do
+      check all env   <- StreamData.one_of([:prod, :dev, :test]),
+                specs <- StreamData.list_of(        
+                          StreamData.fixed_list(
+                            [
+                              StreamData.tuple({StreamData.constant(:module), StreamData.atom(:alphanumeric)}),
+                              StreamData.tuple({StreamData.constant(:envs),   StreamData.one_of(
+                                [
+                                  StreamData.uniq_list_of(
+                                    StreamData.one_of([:prod, :dev, :test, :all]),
+                                    min_length: 1,
+                                    max_length: 2
+                                  ),
+                                  StreamData.constant(:all)
+                                ]
+                              )})
+                            ]
+                          ),
+                          min_length: 1
+                        ) do
+        assert filter_envs_oracle(specs, env) == Utils.filter_by_env(specs, env)
+      end 
     end
   end
 end
