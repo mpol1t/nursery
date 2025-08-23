@@ -1,5 +1,6 @@
 {
   "skip_files": [
-    "nursery.ex"
+    "nursery.ex",
+    "generators.ex"
   ]
 }

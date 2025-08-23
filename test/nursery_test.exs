@@ -5,6 +5,7 @@ defmodule NurseryTest do
   doctest Nursery
 
   alias Nursery.Utils
+  alias Test.Support.Generators, as: Gen
 
   describe "Utils.filter_by_env/2" do
     test "includes children with :all envs" do
@@ -136,31 +137,20 @@ defmodule NurseryTest do
     end
 
     defp filter_envs_oracle(specs, env) do
-      for [module: m, envs: e] <- specs, e == :all or :all in e or env in e do
-        {m, []}
-      end 
+      for spec <- specs,
+          envs = Keyword.get(spec, :envs),
+          envs == :all or :all in envs or env in envs do
+        if Keyword.has_key?(spec, :spec) do
+          Keyword.get(spec, :spec)
+        else
+          {Keyword.get(spec, :module), Keyword.get(spec, :config, [])}
+        end
+      end
     end
 
     property "correctly filters modules for a given environment" do
       check all env   <- StreamData.one_of([:prod, :dev, :test]),
-                specs <- StreamData.list_of(        
-                          StreamData.fixed_list(
-                            [
-                              StreamData.tuple({StreamData.constant(:module), StreamData.atom(:alphanumeric)}),
-                              StreamData.tuple({StreamData.constant(:envs),   StreamData.one_of(
-                                [
-                                  StreamData.uniq_list_of(
-                                    StreamData.one_of([:prod, :dev, :test, :all]),
-                                    min_length: 1,
-                                    max_length: 2
-                                  ),
-                                  StreamData.constant(:all)
-                                ]
-                              )})
-                            ]
-                          ),
-                          min_length: 1
-                        ) do
+                specs <- Gen.specs_generator() do
         assert filter_envs_oracle(specs, env) == Utils.filter_by_env(specs, env)
       end 
     end
