@@ -1,10 +1,10 @@
 defmodule Nursery.Utils do
   @moduledoc """
-  The `Nursery.Utils` module provides utility functions for filtering 
+  The `Nursery.Utils` module provides utility functions for filtering
   child process specifications based on the environment.
   """
 
- @doc """
+  @doc """
   Filters the list of child process specifications based on the provided environment.
 
   If the `envs` field is `:all`, the child process will always be included. If `envs` is a list,
@@ -25,9 +25,24 @@ defmodule Nursery.Utils do
   """
   @spec filter_by_env([[module: module(), config: any(), envs: atom() | [atom(), ...]]], atom()) :: [{module(), any()}]
   def filter_by_env(specs, env) do
-    check_format(specs)
-    |> Enum.filter(& env_filter(&1[:envs], env))
-    |> Enum.map(&format_spec/1)
+    specs
+    |> filter_specs_by_env(env)
+    |> Enum.map(&materialize_spec(&1, nil))
+  end
+
+  @doc """
+  Builds child specs for the given environment.
+
+  Shared config is resolved once and then provided to child `config` and `spec`
+  callbacks when they are declared as unary functions.
+  """
+  @spec build_children(list(keyword()), atom(), any()) :: [Supervisor.child_spec() | {module(), any()}]
+  def build_children(specs, env, shared_config) do
+    shared = resolve_shared_config(shared_config)
+
+    specs
+    |> filter_specs_by_env(env)
+    |> Enum.map(&materialize_spec(&1, shared))
   end
 
   defp env_filter(:all,  _env),                    do: true
@@ -36,9 +51,37 @@ defmodule Nursery.Utils do
     raise ArgumentError, "Invalid value for :envs in spec #{inspect(envs)}. It must be either :all or a list of environments."
   end
 
-  defp format_spec([spec:   s,            envs: _]), do: s
-  defp format_spec([module: m, config: c, envs: _]), do: {m, c}
-  defp format_spec([module: m,            envs: _]), do: {m, []}
+  defp filter_specs_by_env(specs, env) do
+    check_format(specs)
+    |> Enum.filter(&env_filter(&1[:envs], env))
+  end
+
+  defp materialize_spec(spec, shared) do
+    cond do
+      Keyword.has_key?(spec, :spec) ->
+        spec
+        |> Keyword.fetch!(:spec)
+        |> resolve_child_spec(shared)
+
+      Keyword.has_key?(spec, :config) ->
+        {Keyword.fetch!(spec, :module), resolve_child_config(Keyword.fetch!(spec, :config), shared)}
+
+      true ->
+        {Keyword.fetch!(spec, :module), default_child_config(shared)}
+    end
+  end
+
+  defp resolve_shared_config(fun) when is_function(fun, 0),        do: fun.()
+  defp resolve_shared_config(shared_config),                       do: shared_config
+
+  defp resolve_child_spec(fun, shared) when is_function(fun, 1),   do: fun.(shared)
+  defp resolve_child_spec(spec, _shared),                          do: spec
+
+  defp resolve_child_config(fun, shared) when is_function(fun, 1), do: fun.(shared)
+  defp resolve_child_config(config, _shared),                      do: config
+
+  defp default_child_config(nil), do: []
+  defp default_child_config(shared), do: shared
 
   defp check_format(specs) do
     Enum.each(specs, fn spec ->
