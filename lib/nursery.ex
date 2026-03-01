@@ -1,23 +1,28 @@
 defmodule Nursery do
   @moduledoc """
-  The `Nursery` module provides functionality for setting up a supervisor 
+  The `Nursery` module provides functionality for setting up a supervisor
   with child processes filtered by environment.
 
-  This module defines a macro `__using__/1` that can be used in an Elixir 
-  application to configure a supervisor for child processes. The supervisor's 
+  This module defines a macro `__using__/1` that can be used in an Elixir
+  application to configure a supervisor for child processes. The supervisor's
   child processes are dynamically filtered based on the application's environment.
+  An optional shared config can be resolved once during boot and passed to each child.
 
   ## Example
 
       defmodule MyApp do
-        use Nursery, 
+        use Nursery,
           app_name: :my_app,
           strategy: :one_for_one,
+          shared_config: &__MODULE__.shared_config/0,
           children: [
-            [module: Foo, config: [a: 1], envs: :all],
+            [module: Foo, envs: :all],
             [module: Bar, config: [b: 2], envs: [:prod, :dev]],
-            [module: Baz,                 envs: [:test]]
+            [module: Baz, config: &baz_config/1, envs: [:test]]
           ]
+
+        def shared_config, do: [token: "abc123"]
+        def baz_config(shared), do: Keyword.put(shared, :mode, :test)
       end
   """
 
@@ -33,13 +38,15 @@ defmodule Nursery do
     - `:children` ([keyword()]) - A list of child process specifications.
     - `:strategy` (atom) - The supervision strategy (e.g., `:one_for_one`, `:rest_for_one`).
     - `:supervisor_name` (atom) - The name of the supervisor module (optional, defaults to `__MODULE__.Supervisor`).
+    - `:shared_config` (term | (() -> term)) - Optional config resolved once and available to child config/spec callbacks.
   """
   defmacro __using__(opts) do
     app_name        = opts[:app_name]
     children        = opts[:children]
     strategy        = opts[:strategy]
+    shared_config   = Keyword.get(opts, :shared_config)
     supervisor_name = Keyword.get(opts, :supervisor_name, __MODULE__.Supervisor)
-    
+
     quote do
       use Application
 
@@ -49,8 +56,12 @@ defmodule Nursery do
 
       defp children do
         env = Application.fetch_env!(unquote(app_name), :environment)
-        unquote(children)
-        |> Nursery.Utils.filter_by_env(env)
+
+        Nursery.Utils.build_children(
+          unquote(children),
+          env,
+          unquote(shared_config)
+        )
       end
     end
   end

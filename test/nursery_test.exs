@@ -155,4 +155,43 @@ defmodule NurseryTest do
       end 
     end
   end
+
+  describe "Utils.build_children/3" do
+    test "passes shared config to module children without dedicated config" do
+      specs = [[module: Foo, envs: :all]]
+
+      assert [{Foo, [shared: true]}] = Utils.build_children(specs, :dev, [shared: true])
+    end
+
+    test "keeps dedicated config instead of replacing it with shared config" do
+      specs = [[module: Foo, config: [local: true], envs: :all]]
+
+      assert [{Foo, [local: true]}] = Utils.build_children(specs, :dev, [shared: true])
+    end
+
+    test "allows config callbacks to derive child config from shared config" do
+      specs = [[module: Foo, config: &Keyword.put(&1, :local, true), envs: :all]]
+
+      assert [{Foo, config}] = Utils.build_children(specs, :dev, [shared: true])
+      assert Keyword.equal?(config, [shared: true, local: true])
+    end
+
+    test "allows spec callbacks to build child specs from shared config" do
+      spec_builder = fn shared ->
+        Supervisor.child_spec({Agent, fn -> shared end}, id: :shared_agent)
+      end
+
+      specs = [[spec: spec_builder, envs: :all]]
+      [child_spec] = Utils.build_children(specs, :dev, %{shared: true})
+
+      assert child_spec == spec_builder.(%{shared: true})
+    end
+
+    test "resolves shared config callbacks before materializing children" do
+      specs = [[module: Foo, envs: :all]]
+      shared_config = fn -> [shared: true] end
+
+      assert [{Foo, [shared: true]}] = Utils.build_children(specs, :dev, shared_config)
+    end
+  end
 end
